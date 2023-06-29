@@ -875,7 +875,7 @@ class Nestbox
      * @param array $colClass
      * @return string
      */
-    public static function html_table(string $table, string $tblClass = "", array $colClass = []): string
+    public static function html_table(array $table, string $tblClass = "", array $colClass = []): string
     {
         // table start
         $code = "";
