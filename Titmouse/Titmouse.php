@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace app\Nestbox\Titmouse;
+namespace Supergnaw\Nestbox\Titmouse;
 
-use app\Nestbox\Exception\InvalidColumnException;
-use app\Nestbox\Exception\InvalidTableException;
-use app\Nestbox\Exception\NestboxException;
-use app\Nestbox\Nestbox;
+use Supergnaw\Nestbox\Exception\InvalidColumnException;
+use Supergnaw\Nestbox\Exception\InvalidTableException;
+use Supergnaw\Nestbox\Exception\NestboxException;
+use Supergnaw\Nestbox\Nestbox;
 
 class Titmouse extends Nestbox
 {

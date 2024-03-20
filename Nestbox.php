@@ -1,26 +1,23 @@
 <?php
 declare(strict_types=1);
 
-namespace app\Nestbox;
+namespace Supergnaw\Nestbox;
 
-// https://phpdelusions.net/pdo
-
-use Couchbase\IndexFailureException;
 use PDO;
 use PDOException;
-use app\Nestbox\Exception\CannotBindArrayException;
-use app\Nestbox\Exception\EmptyQueryException;
-use app\Nestbox\Exception\FailedToBindValueException;
-use app\Nestbox\Exception\InvalidColumnException;
-use app\Nestbox\Exception\InvalidTableException;
-use app\Nestbox\Exception\EmptyParamsException;
-use app\Nestbox\Exception\NestboxException;
-use app\Nestbox\Exception\QueryErrorException;
-use app\Nestbox\Exception\TransactionBeginFailedException;
-use app\Nestbox\Exception\TransactionCommitFailedException;
-use app\Nestbox\Exception\TransactionException;
-use app\Nestbox\Exception\TransactionInProgressException;
-use app\Nestbox\Exception\TransactionRollbackFailedException;
+use Supergnaw\Nestbox\Exception\CannotBindArrayException;
+use Supergnaw\Nestbox\Exception\EmptyQueryException;
+use Supergnaw\Nestbox\Exception\FailedToBindValueException;
+use Supergnaw\Nestbox\Exception\InvalidColumnException;
+use Supergnaw\Nestbox\Exception\InvalidTableException;
+use Supergnaw\Nestbox\Exception\EmptyParamsException;
+use Supergnaw\Nestbox\Exception\NestboxException;
+use Supergnaw\Nestbox\Exception\QueryErrorException;
+use Supergnaw\Nestbox\Exception\TransactionBeginFailedException;
+use Supergnaw\Nestbox\Exception\TransactionCommitFailedException;
+use Supergnaw\Nestbox\Exception\TransactionException;
+use Supergnaw\Nestbox\Exception\TransactionInProgressException;
+use Supergnaw\Nestbox\Exception\TransactionRollbackFailedException;
 
 class Nestbox
 {

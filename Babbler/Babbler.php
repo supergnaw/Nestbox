@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace app\Nestbox\Babbler;
+namespace Supergnaw\Nestbox\Babbler;
 
-use app\Nestbox\Nestbox;
+use Supergnaw\Nestbox\Nestbox;
 
 class Babbler extends Nestbox
 {

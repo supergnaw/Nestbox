@@ -98,6 +98,7 @@ $nest->transaction( "UPDATE `accounts` SET `balance` = :balance WHERE `account_i
 There are three functions that can be used for determining the validity of the database schema. These are used in the quick queries to build prepared statements with variable table or column names, and can also be used to build expanded functionality to query building.
 
 ## Exceptions
+*todo: add more documentation*
 
 # References
 Since this was a project designed for learning, here are some great references used during the creation of this project:

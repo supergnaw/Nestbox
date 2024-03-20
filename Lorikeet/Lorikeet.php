@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace app\Nestbox\Lorikeet;
+namespace Supergnaw\Nestbox\Lorikeet;
 
-use app\Nestbox\Nestbox;
+use Supergnaw\Nestbox\Nestbox;
 
 class Lorikeet extends Nestbox
 {
