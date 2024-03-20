@@ -1,6 +1,6 @@
 {
-    "name": "supergnaw/form-security",
-    "description": "Class for simplifying webpage form security",
+    "name": "supergnaw/nestbox",
+    "description": "A interface for databases using PHP Data Objects written to easily fill gaps of niche requirements.",
     "type": "library",
     "license": "AGPL-3.0",
     "autoload": {
