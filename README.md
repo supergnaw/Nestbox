@@ -12,8 +12,11 @@ Each bird *(class)* in the "nestbox" serves as a way to add specific functionali
 | [Cuckoo](Cuckoo/readme.md)       | MySQL database in-line encryption for data at rest. *(Not yet complete/available)* |
 | [Lorikeet](Lorikeet/readme.md)   | An image upload processing and indexing. *(Not yet complete/available)* |
 | [Magpie](Magpie/readme.md)       | A user and group permissions manager. |
-| [Myna](Myna/readme.md)           | An API endpoint management system for easy REST API building. *(Not yet complete/available)* |
+| [Nightjar](Nightjar/readme.md)   | TBA |
+| [Swallow](Swallow/readme.md)     | TBA |
 | [Titmouse](Titmouse/readme.md)   | A user management interface that can register/login/logout users while adhering to standard practicces for password handling. |
+| [Waxbill](Waxbill/readme.md)     | TBA |
+| [Weaver](Weaver/readme.md)       | An API endpoint management system for easy REST API building. *(Not yet complete/available)* |
 
 ### Basic Usage
 The Nestbox class was designed for simplistic usage for database interaction while incorporating best practices for safely interacting with the database.
