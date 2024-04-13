@@ -1,108 +1,51 @@
-# Nestbox [WIP]
+# Nestbox
 
-A interface for databases using PHP Data Objects written to easily fill gaps of niche requirements. This project is updated as needs arise and is probably a result of NIH syndrome.
+_Nestbox_'s purpose is to be a PDO wrapper for easily impelmenting database functionality within a PHP project.
 
 ## Nestbox Birds
+
+*(or classes, or packages, or however you want to view them)*
+
 Each bird *(class)* in the "nestbox" serves as a way to add specific functionality to Nestbox.
 
-| Bird                             | Description |
-|----------------------------------| --- |
-| [Babbler](src/Babbler/readme.md)     | A flexible content management system designed with basic website/blog editing functioality in mind. |
-| [Bullfinch](src/Bullfinch/readme.md) | An interface designed to easily create and deploy a simple message board. *(Not yet complete/available)* |
-| [Cuckoo](src/Cuckoo/readme.md)       | MySQL database in-line encryption for data at rest. *(Not yet complete/available)* |
-| [Lorikeet](src/Lorikeet/readme.md)   | An image upload processing and indexing. *(Not yet complete/available)* |
-| [Magpie](src/Magpie/readme.md)       | A user and group permissions manager. |
-| [Nightjar](src/Nightjar/readme.md)   | TBA |
-| [Swallow](src/Swallow/readme.md)     | TBA |
-| [Titmouse](src/Titmouse/readme.md)   | A user management interface that can register/login/logout users while adhering to standard practicces for password handling. |
-| [Waxbill](src/Waxbill/readme.md)     | TBA |
-| [Weaver](src/Weaver/readme.md)       | An API endpoint management system for easy REST API building. *(Not yet complete/available)* |
+| Bird                                 | Description                                                                                  |
+|--------------------------------------|----------------------------------------------------------------------------------------------|
+| [Nestbox](src/readme.md)             | The core "abstract" class that interfaces each component class of Nestbox with the database. |
+| [Babbler](src/Babbler/readme.md)     | Content management for website/blog functionality.                                           |
+| [Bullfinch](src/Bullfinch/readme.md) | Message board management. *(Not yet complete/available)*                                     |
+| [Cuckoo](src/Cuckoo/readme.md)       | Transparent in-line encryption for queries. *(Not yet complete/available)*                   |
+| [Lorikeet](src/Lorikeet/readme.md)   | An image upload processing and indexing. *(Not yet complete/available)*                      |
+| [Magpie](src/Magpie/readme.md)       | A user and role permissions manager.                                                         |
+| [Titmouse](src/Titmouse/readme.md)   | User registration and session management with built-in password best-practicces.             |
+| [Weaver](src/Weaver/readme.md)       | REST API endpoint management. *(Not yet complete/available)*                                 |
 
-### Basic Usage
-The Nestbox class was designed for simplistic usage for database interaction while incorporating best practices for safely interacting with the database.
+# Development & Contributing
 
-```php
-use Supergnaw\Nestbox;
+The following is intended to provide guidelines for future development
 
-$nest = new Nestbox();
+## Class Structure
 
-try {
-    if( $nest->query_execute( "SELECT * FROM `users`;" )) {
-        $users = $nest->results();
-    }
-} catch ( NestboxException $exception ) {
-    die( $exception->getMessage());
-}
-```
+For code cleanliness, code consistancy, and future development and maintenance, each class should have a structure
+matching the following:
 
-### Database Details
-The database connection is defined through four constants:
-- `NESTBOX_DB_HOST`: the database host ( default: `'localhost'` )
-- `NESTBOX_DB_USER`: the database username ( default: `'root'` )
-- `NESTBOX_DB_PASS`: the database username ( default: `''` )
-- `NESTBOX_DB_NAME`: the database username ( default: `''` )
-
-These constants can be defined in a singularly called file, however if they are not, the class defines them automatically upon instantiation.
-
-## Quick Queries
-Nestbox has three built-in functions designed to interact with a database some of the most common forms of database manipulation: `insert()`, `update()`, and `delete()`. Their purpose is to simplify the process by internally building prepared statements using the provided data. All values are passed as parameters using `:named` placeholders. Additionally, table and column names are verified against the database schema with any inconsistencies throwing an exception.
-
-### Insert
-```php
-$nest->insert( string $table, array $params, bool $update = true ): int
-```
-- `$table`: a string designating the table name
-- `$params`: an array of ['column' => 'value'] parameters to insert into `$table`
-- `$update`: a boolean indicating update on duplicate key; default is true
-
-The return value is `int` type of the number of rows inserted.
-
-### Update
-```php
-$nest->update( string $table, array $params, array $where, string $conjunction = "AND" ): int
-```
-- `$table`: a string designating the table name
-- `$params`: an array of ['column' => 'value'] parameters to update in `$table`
-- `$where`: an array of ['column' => 'value'] parameters to determine "where" the update will take place, e.g. `['user_id' => 123]`
-- `$conjunction`: a string indicating how each $where parameter will be joined. The only two supported options are: `AND`, `OR`
-
-The return value is `int` type of the number of rows affected.
-
-*Please note that `0` doesn't necessarily mean the query failed to execute, just that no values were changed.*
-
-### Delete
-```php
-$nest->delete( string $table, array $where, string $conjunction = "AND" ): int
-```
-- `$table`: a string designating the table name
-- `$where`: an array of ['column' => 'value'] parameters to determine "where" the deletion will take place, e.g. `['user_id' => 123]`
-- `$conjunction`: a string indicating how each $where parameter will be joined. The only two supported options are: `AND`, `OR`
-
-The return value is `int` type of the number of rows affected.
-
-## Transactions
-Transactions help with data integrity across multiple tables within the database.
-```php
-$nest->transaction( $query, $params, $commit ): bool
-```
-
-
-The following is an example of how a transaction could be implemented.
-```php
-$accountChanges = ['account_id' => 'a3f8e0d49', 'amount' => 300];
-$nest->transaction( "INSERT INTO `account_changes` ( `account_id`, `amount` ) VALUES ( :account, :amount );", $accountChanges );
-$newAccountBalance = ['account_id' => 'a3f8e0d49', 'balance' => $oldBalance - 300];
-$nest->transaction( "UPDATE `accounts` SET `balance` = :balance WHERE `account_id` = :account_id;", $newBalance, true );
-```
-
-### Committing Transactions
-
-## Database Schema
-There are three functions that can be used for determining the validity of the database schema. These are used in the quick queries to build prepared statements with variable table or column names, and can also be used to build expanded functionality to query building.
-
-## Exceptions
-*todo: add more documentation*
-
-# References
-Since this was a project designed for learning, here are some great references used during the creation of this project:
-- [(The only proper) PDO tutorial](https://phpdelusions.net/pdo)
+1. Class Name
+    - The name must be a bird for no reason other than thematic reasoning
+    - The constant `PACKAGE_NAME` must be set to match the bird name of the class
+2. Class Settings
+    - classes may use the **nestbox_settings** table to store perpetual configurations
+    - Settings are automatically loaded and saved based on variable names
+    - Any variables starting with the class bird name will be loaded from the settings table with `load_settings()` and
+      saved to the settings table with `save_settings()`
+3. Class Tables
+    - Each table a class uses should have a unique function to create each table and associated triggers/views that is
+      required for the class to work
+    - Each table creation function must start with `create_class_table_`
+    - Whenever _Nestbox_ encounters an **InvalidTableException**, it attempts to create all class tables, then
+      reattempts the query that threw the exception, but this only works if the functions are named appropriately
+4. Class Methods
+    - The remaining code of the class will be the class functions organized in a logical flow in order of how they might
+      be used in practice within a project
+    - Function visibility should be practiced where only the functions intended for users are public and all remaining
+      will be private.
+5. Documentation
+    - Document of each public function is required, but optional for private or protected functions

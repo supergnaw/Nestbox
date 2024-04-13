@@ -8,39 +8,50 @@ use Supergnaw\Nestbox\Nestbox;
 
 class Magpie extends Nestbox
 {
-    public array $errors = [];
+    final protected const string PACKAGE_NAME = 'magpie';
+    // settings variables
+    public string $magpieUsersTable = 'users';
+    public string $magpieUserColumn = 'username';
 
-    // constructor
-    public function __construct(string $image_directory = null)
+    public function create_tables(): void
     {
-        // database functions
-        parent::__construct();
-        // create class tables
-        // $this->create_lorikeet_tables();
+        $this->create_permissions_table();
+        $this->create_roles_table();
+        $this->create_permission_assignments_table();
     }
 
-    private function create_magpie_tables(): bool
+    private function create_class_table_magpie_permissions(): bool
     {
-        // check if entry table exists
-        if (!$this->valid_schema('lorikeet_images')) {
-            $sql = "CREATE TABLE IF NOT EXISTS `lorikeet_images` (
-                        `image_id` VARCHAR( 64 ) NOT NULL ,
-                        `image_title` VARCHAR( 128 ) NOT NULL ,
-                        `image_caption` VARCHAR( 256 ) NULL ,
-                        `edited` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP ,
-                        `tags` MEDIUMTEXT NOT NULL ,
-                        PRIMARY KEY ( `image_id` )
-                    ) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
-            if (!$this->query_execute($sql)) return false;
-        }
+        $sql = "CREATE TABLE IF NOT EXISTS `magpie_permissions` (
+                    `permission_id` INT NOT NULL AUTO_INCREMENT ,
+                    `permission_name` VARCHAR(63) NOT NULL ,
+                    `permission_description` VARCHAR(255) NOT NULL ,
+                    PRIMARY KEY (`permission_id`)) ENGINE = InnoDB; 
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
 
-        return true;
+        return $this->query_execute(query: $sql);
     }
 
-    // todo: use Nestbox->load_settings() instead
-    private function load_settings(): bool
+    private function create_class_table_magpie_permission_assignments(): bool
     {
-        return true;
+        $sql = "CREATE TABLE IF NOT EXISTS `magpie_permission_assignments` (
+                    `assignment_id` INT NOT NULL AUTO_INCREMENT ,
+                    `permission_id` INT NOT NULL ,
+                    `user_id` VARCHAR( 125 ) NOT NULL ,
+                    PRIMARY KEY ( `assignment_id` )
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+
+        return $this->query_execute(query: $sql);
+    }
+
+    private function create_class_table_magpie_roles(): void
+    {
+        $sql = "";
+    }
+
+    private function create_class_table_magpie_role_assignments(): void
+    {
+
     }
 
     public function permission_create(): bool

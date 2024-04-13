@@ -5,6 +5,7 @@ namespace Supergnaw\Nestbox;
 
 use PDO;
 use PDOException;
+use PDOStatement;
 use Supergnaw\Nestbox\Exception\CannotBindArrayException;
 use Supergnaw\Nestbox\Exception\EmptyQueryException;
 use Supergnaw\Nestbox\Exception\FailedToBindValueException;
@@ -21,30 +22,31 @@ use Supergnaw\Nestbox\Exception\TransactionRollbackFailedException;
 
 class Nestbox
 {
+    protected const string PACKAGE_NAME = 'nestbox';
+
     /*
         1.0 Structs & Vars
     */
 
     // connection properties
-    private $host;
-    protected $user;
-    protected $pass;
-    protected $name;
+    protected string $host;
+    protected string $user;
+    protected string $pass;
+    protected string $name;
 
     // handler properties
-    protected $pdo;
-    protected $stmt;
+    protected PDO $pdo;
+    protected PDOStatement $stmt;
 
     // database properties
-    protected $tableSchema = [];
-    protected $triggerSchema = [];
+    protected array $tableSchema = [];
+    protected array $triggerSchema = [];
 
     // query information
-    protected $results = [];
-    protected $rowCount = null;
-    protected $lastInsertId = null;
+    protected array $results = [];
 
-    private const SETTINGS_TABLE = 'nestbox_settings';
+    // settings
+    protected array $settingNames = [];
 
 
     /**
@@ -57,38 +59,51 @@ class Nestbox
      */
     public function __construct(string $host = null, string $user = null, string $pass = null, string $name = null)
     {
-        if (is_null($host)) {
-            throw new EmptyParamsException("Missing database hostname.");
-        } else {
-            $this->host = $host;
+        // start session if unstarted
+        if (PHP_SESSION_ACTIVE !== session_status()) {
+            session_start();
         }
 
-        if (is_null($user)) {
-            throw new EmptyParamsException("Missing database username.");
-        } else {
-            $this->user = $user;
+        // dynamically define constant defaults
+        if (!defined(constant_name: 'NESTBOX_DB_HOST')) define('NESTBOX_DB_HOST', 'localhost');
+        if (!defined(constant_name: 'NESTBOX_DB_USER')) define('NESTBOX_DB_USER', 'root');
+        if (!defined(constant_name: 'NESTBOX_DB_PASS')) define('NESTBOX_DB_PASS', '');
+        if (!defined(constant_name: 'NESTBOX_DB_NAME')) define('NESTBOX_DB_NAME', '');
+
+        // set default connection properties
+        if (!$this->host = $host) {
+            if (defined(constant_name: 'NESTBOX_DB_HOST')) {
+                $this->host = constant(name: 'NESTBOX_DB_HOST');
+            } else {
+                throw new EmptyParamsException(message: "Missing database hostname.");
+            }
         }
 
-        if (is_null($pass)) {
-            throw new EmptyParamsException("Missing database password.");
-        } else {
-            $this->pass = $pass;
+        if (!$this->user = $user) {
+            if (defined(constant_name: 'NESTBOX_DB_USER')) {
+                $this->user = constant(name: 'NESTBOX_DB_USER');
+            } else {
+                throw new EmptyParamsException(message: "Missing database username.");
+            }
         }
 
-        if (is_null($name)) {
-            throw new EmptyParamsException("Missing database name.");
-        } else {
-            $this->name = $name;
+        if (!$this->pass = $pass) {
+            if (defined(constant_name: 'NESTBOX_DB_PASS')) {
+                $this->pass = constant(name: 'NESTBOX_DB_PASS');
+            } else {
+                throw new EmptyParamsException(message: "Missing database password.");
+            }
         }
-    }
 
-    /**
-     * Default destructor
-     */
-    public function __destruct()
-    {
-        // close any existing database connection
-        $this->close();
+        if (!$this->name = $name) {
+            if (defined(constant_name: 'NESTBOX_DB_NAME')) {
+                $this->name = constant(name: 'NESTBOX_DB_NAME');
+            } else {
+                throw new EmptyParamsException(message: "Missing database name.");
+            }
+        }
+
+        $this->load_settings();
     }
 
     /**
@@ -100,70 +115,29 @@ class Nestbox
      * @param string|null $name
      * @return void
      */
-    public function __invoke(string $host = null, string $user = null, string $pass = null, string $name = null)
+    public function __invoke(string $host = null, string $user = null, string $pass = null, string $name = null): void
     {
-        $this->__construct(host: $host, user: $user, pass: $pass, name: $name);
+        // save settings
+        $this->save_settings();
+
+        // close any existing database connection
+        $this->close();
+
+        // reconnect to defined database
+        $this->__construct($host, $user, $pass, $name);
     }
 
-//    /**
-//     * Set database connection host
-//     *
-//     * @param string|null $host
-//     * @return void
-//     */
-//    public function set_db_host(string $host = null): void
-//    {
-//        if (empty($host)) {
-//            throw new EmptyParamsException("Missing database hostname.");
-//        }
-//
-//        $this->host = $host;
-//    }
-//
-//    /**
-//     * Set database connection user
-//     *
-//     * @param string|null $user
-//     * @return void
-//     */
-//    public function set_db_user(string $user = null): void
-//    {
-//        if (empty($user)) {
-//            throw new EmptyParamsException("Missing database username.");
-//        }
-//
-//        $this->user = $user;
-//    }
-//
-//    /**
-//     * Set database connection password
-//     *
-//     * @param string|null $pass
-//     * @return void
-//     */
-//    public function set_db_pass(string $pass = null): void
-//    {
-//        if (empty($pass)) {
-//            throw new EmptyParamsException("Missing database password.");
-//        }
-//
-//        $this->pass = $pass;
-//    }
-//
-//    /**
-//     * Set database connection name
-//     *
-//     * @param string|null $name
-//     * @return void
-//     */
-//    public function set_db_name(string $name = null): void
-//    {
-//        if (empty($name)) {
-//            throw new EmptyParamsException("Missing database name.");
-//        }
-//
-//        $this->name = $name;
-//    }
+    /**
+     * Default destructor
+     */
+    public function __destruct()
+    {
+        // save settings
+        $this->save_settings();
+
+        // close any existing database connection
+        $this->close();
+    }
 
     /*
         2.0 Connections
@@ -181,8 +155,7 @@ class Nestbox
         // MySQL Database
         try {
             $this->pdo = new PDO(
-                "mysql:host=" . $this->host .
-                ";dbname=" . $this->name . "",
+                "mysql:host={$this->host};dbname={$this->name}",
                 $this->user,
                 $this->pass,
                 [
@@ -208,10 +181,7 @@ class Nestbox
      */
     protected function check_connection(): bool
     {
-        if (empty($this->pdo)) {
-            // no connection
-            return false;
-        } else {
+        if (!empty($this->pdo)) {
             // test existing connection for timeout
             $this->prep("SELECT 1");
             $this->execute();
@@ -222,23 +192,19 @@ class Nestbox
 
             // kill dead connection
             $this->close();
-            return false;
         }
+
+        return false;
     }
 
     /**
      * Close an existing connection
-     *
-     * @return bool
      */
-    protected function close(): bool
+    protected function close(): void
     {
         // https://www.php.net/manual/en/pdo.connections.php
         // "To close the connection, you need to destroy the object"
         $this->pdo = null;
-        unset($this->pdo);
-        if (empty($this->pdo)) return true;
-        return false;
     }
 
     /*
@@ -251,12 +217,20 @@ class Nestbox
      * @param string $query
      * @param array $params
      * @param bool $close
+     * @param bool $retry
      * @return bool
      */
-    public function query_execute(string $query, array $params = [], bool $close = false): bool
+    public function query_execute(string $query, array $params = [], bool $close = false, bool $retry = true): bool
     {
-        // verify query isn't empty
-        if (empty(trim($query))) throw new EmptyQueryException("Empty MySQL query provided.");
+        // check query emptiness
+        if (empty(trim($query))) {
+            if ($close) {
+                $this->close();
+                return true;
+            } else {
+                throw new EmptyQueryException("Empty MySQL query provided.");
+            }
+        }
 
         // verify parameters
         $params = $this->verify_parameters($query, $params);
@@ -275,12 +249,31 @@ class Nestbox
         }
 
         // execute
-        if ($this->execute()) {
-            if ($close) $this->close();
-            return true;
-        } else {
-            if ($close) $this->close();
-            return false;
+        try {
+            if ($this->execute()) {
+                if ($close) $this->close();
+                return true;
+            } else {
+                if ($close) $this->close();
+                return false;
+            }
+        } catch (InvalidTableException) {
+            // if class tables haven't been created yet, try to create them and reattempt query execution
+            if ($retry) {
+                $this->create_class_tables();
+                return $this->query_execute($query, $params, $close, retry: false);
+            }
+
+            throw new InvalidTableException();
+        }
+    }
+
+    protected function create_class_tables(): void
+    {
+        foreach (get_class_methods($this) as $methodName) {
+            if (str_starts_with(haystack: $methodName, needle: "create_class_table_")) {
+                $this->$methodName();
+            }
         }
     }
 
@@ -348,7 +341,13 @@ class Nestbox
         throw new FailedToBindValueException("Failed to bind '{$value}' to :{$variable} ({$type})");
     }
 
-    protected static function check_variable_type($var): int | string
+    /**
+     * Checks variable type for parameter binding
+     *
+     * @param $var
+     * @return int|string
+     */
+    protected static function check_variable_type($var): int|string
     {
         if (is_int($var)) return PDO::PARAM_INT;
         if (is_bool($var)) return PDO::PARAM_BOOL;
@@ -428,58 +427,6 @@ class Nestbox
     /*
         5.0 Transactions
     */
-    /**
-     * Pass an array of SQL queries and perform a transaction with them
-     *
-     * @param array $queries
-     * @return array
-     */
-    public function transaction_execute(array $queries): array
-    {
-        try {
-            // connect to database
-            $this->connect();
-
-            // start transaction if not already in progress
-            if ($this->pdo->inTransaction()) {
-                throw new TransactionInProgressException("Unable to start new transaction while one is already in progress.");
-            }
-            $this->pdo->beginTransaction();
-
-            // perform transaction
-            $results = [];
-            foreach ($queries as $query => $params) {
-                // prepare query
-                $this->prep($query, $params);
-
-                // bind parameters
-                if (!empty($params)) {
-                    foreach ($params as $var => $val) {
-                        $this->bind($var, $val);
-                    }
-                }
-
-                if ($this->execute()) {
-                    $results[] = [
-                        'rows' => $this->results(),
-                        'row_count' => $this->row_count(),
-                        'last_id' => $this->last_id(),
-                    ];
-                }
-            }
-
-            // commit the transaction and return any results
-            if ($this->pdo->commit()) {
-                return $results;
-            } else {
-                throw new TransactionCommitFailedException("Failed to commit transaction.");
-            }
-        } catch (\Exception $e) {
-            // Oh no, we dun goof'd! Roll back database and re-throw the error
-            $this->pdo->rollback();
-            throw new TransactionException($e->getMessage());
-        }
-    }
 
     /**
      * Use a single query to perform an incremental transaction
@@ -533,6 +480,59 @@ class Nestbox
         }
     }
 
+    /**
+     * Pass an array of SQL queries and perform a transaction with them
+     *
+     * @param array $queries
+     * @return array
+     */
+    public function transaction_execute(array $queries): array
+    {
+        try {
+            // connect to database
+            $this->connect();
+
+            // start transaction if not already in progress
+            if ($this->pdo->inTransaction()) {
+                throw new TransactionInProgressException("Unable to start new transaction while one is already in progress.");
+            }
+            $this->pdo->beginTransaction();
+
+            // perform transaction
+            $results = [];
+            foreach ($queries as $query => $params) {
+                // prepare query
+                $this->prep($query, $params);
+
+                // bind parameters
+                if (!empty($params)) {
+                    foreach ($params as $var => $val) {
+                        $this->bind($var, $val);
+                    }
+                }
+
+                if ($this->execute()) {
+                    $results[] = [
+                        'rows' => $this->results(),
+                        'row_count' => $this->row_count(),
+                        'last_id' => $this->last_id(),
+                    ];
+                }
+            }
+
+            // commit the transaction and return any results
+            if ($this->pdo->commit()) {
+                return $results;
+            } else {
+                throw new TransactionCommitFailedException("Failed to commit transaction.");
+            }
+        } catch (\Exception $e) {
+            // Oh no, we dun goof'd! Roll back database and re-throw the error
+            $this->pdo->rollback();
+            throw new TransactionException($e->getMessage());
+        }
+    }
+
     public function rollback(): bool
     {
         if ($this->pdo->inTransaction()) {
@@ -546,6 +546,12 @@ class Nestbox
     /*
         6.0 Quick Queries
     */
+    /**
+     * @param string $table
+     * @param array $params
+     * @param bool $update
+     * @return int
+     */
     public function insert(string $table, array $params, bool $update = true): int
     {
         // verify table
@@ -630,11 +636,18 @@ class Nestbox
         }
     }
 
+    /**
+     * @param string $table
+     * @param array $params
+     * @param array $where
+     * @param string $conjunction
+     * @return int
+     */
     public function update(string $table, array $params, array $where, string $conjunction = "AND"): int
     {
         // verify table
         if (!$this->valid_schema($table)) {
-            throw new NestboxException\InvalidTable("Cannot update invalid table: {$table}");
+            throw new InvalidTableException("Cannot update invalid table: {$table}");
         }
 
         // parse updates
@@ -655,7 +668,7 @@ class Nestbox
                 $wheres[] = "`{$col}` = :{$col}";
             }
         }
-        $conjunction = (in_array($conjunction, ["AND", "OR"])) ? $conjunction : "AND";
+        $conjunction = (in_array(strtoupper($conjunction), ["AND", "OR"])) ? " " . strtoupper($conjunction) . " " : " AND ";
         $wheres = implode(" {$conjunction} ", $wheres);
 
         // compile query
@@ -666,11 +679,17 @@ class Nestbox
         return $this->row_count();
     }
 
+    /**
+     * @param string $table
+     * @param array $where
+     * @param $conjunction
+     * @return int
+     */
     public function delete(string $table, array $where, $conjunction = "AND"): int
     {
         // verify table
         if (!$this->valid_schema($table)) {
-            throw new NestboxException\InvalidTable("Cannot delete from invalid table: {$table}");
+            throw new InvalidTableException("Cannot delete from invalid table: {$table}");
         }
 
         // parse columns
@@ -684,7 +703,7 @@ class Nestbox
                 $params[$col] = $val;
             }
         }
-        $conjunction = (in_array($conjunction, ["AND", "OR"])) ? $conjunction : "AND";
+        $conjunction = (in_array(strtoupper($conjunction), ["AND", "OR"])) ? " " . strtoupper($conjunction) . " " : " AND ";
         $wheres = implode(" {$conjunction} ", $wheres);
 
         // compile query
@@ -695,7 +714,13 @@ class Nestbox
         return $this->row_count();
     }
 
-    public function select(string $table, array $where, string $conjunction = "AND"): array
+    /**
+     * @param string $table
+     * @param array $where
+     * @param string $conjunction
+     * @return array
+     */
+    public function select(string $table, array $where = [], string $conjunction = "AND"): array
     {
         if (!$this->valid_schema($table)) {
             throw new InvalidTableException();
@@ -711,9 +736,10 @@ class Nestbox
                 $params[$col] = $val;
             }
         }
+        $conjunction = (in_array(strtoupper($conjunction), ["AND", "OR"])) ? " " . strtoupper($conjunction) . " " : " AND ";
         $wheres = implode($conjunction, $wheres);
 
-        $sql = "SELECT * FROM `{$table}` WHERE {$wheres}";
+        $sql = ($wheres)  ? "SELECT * FROM `{$table}` WHERE {$wheres};" : "SELECT * FROM `{$table}`;";
         $this->query_execute($sql, $params);
         return $this->results();
     }
@@ -721,6 +747,12 @@ class Nestbox
     /*
         7.0 Schema
     */
+
+    public function table_schema(): array
+    {
+        $this->load_table_schema();
+        return $this->tableSchema;
+    }
 
     /**
      * Load table schema
@@ -755,7 +787,7 @@ class Nestbox
     {
         $sql = "SELECT `TRIGGER_NAME`, `EVENT_OBJECT_TABLE`
                 FROM `INFORMATION_SCHEMA`.`TRIGGERS`
-                WHERE `TRIGGER_SCHEMA` = '". NESTBOX_DB_NAME ."';";
+                WHERE `TRIGGER_SCHEMA` = '{$this->name}';";
 
         if (!$this->query_execute($sql, ['database_name' => $this->name])) return false;
 
@@ -777,22 +809,22 @@ class Nestbox
      * @param string|null $col
      * @return bool
      */
-    public function valid_schema(string $tbl, string $col = null): bool
+    public function valid_schema(string $table, string $column = null): bool
     {
         if (empty($this->tableSchema)) $this->load_table_schema();
 
-        $tbl = trim($tbl ?? "");
+        $table = trim($table ?? "");
         $col = trim($col ?? "");
 
         // check table
-        if (!array_key_exists($tbl, $this->tableSchema)) {
+        if (!array_key_exists($table, $this->tableSchema)) {
             if (empty($this->tableSchema)) $this->load_table_schema();
-            if (!array_key_exists($tbl, $this->tableSchema)) return false;
+            if (!array_key_exists($table, $this->tableSchema)) return false;
         }
         if (empty($col)) return true;
 
         // check column
-        return array_key_exists($col, $this->tableSchema[$tbl]);
+        return array_key_exists($col, $this->tableSchema[$table]);
     }
 
     /**
@@ -803,7 +835,7 @@ class Nestbox
      */
     public function valid_table(string $table): bool
     {
-        return $this->valid_schema(tbl: $table);
+        return $this->valid_schema(table: $table);
     }
 
     /**
@@ -815,7 +847,7 @@ class Nestbox
      */
     public function valid_column(string $table, string $column): bool
     {
-        return $this->valid_schema(tbl: $table, col: $column);
+        return $this->valid_schema(table: $table, column: $column);
     }
 
     /**
@@ -831,7 +863,7 @@ class Nestbox
             $this->load_trigger_schema();
         }
 
-        if (!$this->valid_schema(tbl: $table)) return false;
+        if (!$this->valid_schema(table: $table)) return false;
 
         if (in_array(needle: $trigger, haystack: $this->triggerSchema[$table] ?? [])) return true;
 
@@ -849,12 +881,12 @@ class Nestbox
     public function table_primary_key(string $table): string
     {
         if (!$this->valid_schema($table)) {
-            throw new NestboxException\InvalidTable("Cannot get primary key of invalid table: {$table}");
+            throw new InvalidTableException(message: "Cannot get primary key of invalid table: {$table}");
         }
 
         $sql = "SHOW KEYS FROM `{$table}` WHERE `Key_name` = 'PRIMARY';";
         if ($this->query_execute($sql)) {
-            $rows = $this->results(true);
+            $rows = $this->results(firstResultOnly: true);
             return $rows["Column_name"];
         } else {
             return "";
@@ -864,58 +896,204 @@ class Nestbox
     /*
      *  8.0 Nestbox Settings
      */
-    public function create_settings_table(): bool
+    protected function create_class_table_nestbox_settings(): bool
     {
-        $sql = "CREATE TABLE IF NOT EXISTS `" . self::SETTINGS_TABLE ."` (
+        $sql = "CREATE TABLE IF NOT EXISTS `nestbox_settings` (
                     `package_name` VARCHAR( 64 ) NOT NULL ,
                     `setting_name` VARCHAR( 64 ) NOT NULL ,
                     `setting_type` VARCHAR( 64 ) NOT NULL ,
                     `setting_value` VARCHAR( 128 ) NULL ,
                     PRIMARY KEY ( `setting_name` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
 
-        if (!$this->query_execute($sql)) return false;
-
-        return true;
+        return $this->query_execute($sql);
     }
 
-    public function update_setting_values(array $settings): bool
+    public function load_settings(): array
     {
-        if (count($settings) != $this->insert(table: self::SETTINGS_TABLE, params: $settings)) {
-            return false;
+        $where = ['package_name' => self::PACKAGE_NAME];
+
+        $settings = $this->parse_settings($this->select(table: 'nestbox_settings', where: $where));
+
+        foreach ($settings as $name => $value) {
+            if (property_exists($this, $name)) {
+                $this->update_setting($name, $value);
+            }
         }
 
-        return true;
+        return $settings;
     }
 
-    public function load_settings(string $package = null): array
+    public function update_setting(string $name, string $value): bool
     {
-        if (empty($package)) {
-            $sql = "SELECT * FROM " . self::SETTINGS_TABLE . "
-                ORDER BY `package_name` ASC, `setting_name` ASC;";
-        } else {
-            $sql = "SELECT * FROM " . self::SETTINGS_TABLE . "
-                WHERE `package_name` == :package_name
-                ORDER BY `setting_name` ASC;";
+        if (property_exists($this, $name)) {
+            $this->$name = $value;
+            return true;
         }
 
-
-
-        return [];
+        return false;
     }
 
-    public function parse_settings(array $settings): array
+    public function save_settings(): void
+    {
+        $sql = "INSERT INTO `nestbox_settings` (
+                    `package_name`, `setting_name`, `setting_type`, `setting_value`
+                ) VALUES (
+                    :package_name, :setting_name, :setting_type, :setting_value
+                ) ON DUPLICATE KEY UPDATE
+                    `package_name` = :package_name,
+                    `setting_name` = :setting_name,
+                    `setting_type` = :setting_type,
+                    `setting_value` = :setting_value;";
+
+        foreach (get_class_vars(get_class($this)) as $setting) {
+            if (!str_starts_with($setting, needle: self::PACKAGE_NAME)) {
+                continue;
+            }
+
+            $params = [
+                "package_name" => self::PACKAGE_NAME,
+                "setting_name" => $setting,
+                "setting_type" => $this->parse_setting_type($this->$setting),
+                "setting_value" => strval($this->$setting),
+            ];
+
+            $this->query_execute($sql, $params);
+        }
+    }
+
+    protected function parse_settings(array $settings): array
     {
         $output = [];
         foreach ($settings as $setting) {
-            $output[$setting['setting_name']] = $this->parse_setting(type: $setting['setting_type'], value: $setting['setting_value']);
+            $output[$setting['setting_name']] = $this->setting_type_conversion(type: $setting['setting_type'], value: $setting['setting_value']);
         }
         return $output;
     }
 
-    public function parse_setting(string $type, string $value): array
+    protected function parse_setting_type(int | float | bool | array | string $setting): string
     {
-        return [];
+        if (is_int($setting)) return "string";
+        if (is_float($setting)) return "float";
+        if (is_bool($setting)) return "boolean";
+        if (is_array($setting)) return "array";
+        if (json_validate($setting)) return "json";
+        return "string";
+    }
+
+    protected function setting_type_conversion(string $type, string $value): int | float | bool | array | string
+    {
+        if ("int" == strtolower($type)) {
+            return intval($value);
+        }
+
+        if (in_array(strtolower($type), ["double", "float"])) {
+            return floatval($value);
+        }
+
+        if ("bool" == strtolower($type)) {
+            return boolval($value);
+        }
+
+        if (in_array(strtolower($type), ["array", "json"])) {
+            return json_decode($value, associative: true);
+        }
+
+        return $value;
+    }
+
+    /*
+     *  9.0 Error Logging
+     */
+    protected function create_class_table_nestbox_errors(): void
+    {
+        $sql = "CREATE TABLE IF NOT EXISTS `nestbox_errors` (
+                    `error_id` INT NOT NULL AUTO_INCREMENT ,
+                    `occurred` NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+                    `message` VARCHAR( 512 ) NOT NULL ,
+                    `query` VARCHAR( 4096 ) NOT NULL ,
+                    PRIMARY KEY ( `error_id` )
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+        $this->query_execute($sql);
+    }
+
+    protected function log_error(string $message, string $query): int
+    {
+        $error = [
+            "message" => substr(string: $message, offset: 0, length: 512),
+            "query" => substr(string: $query, offset: 0, length: 4096),
+        ];
+        return $this->insert(table: 'nestbox_errors', params: $error);
+    }
+
+    /*
+     *  10.0 Database Imports & Exports
+     */
+
+    public function dump_table(string $table): array
+    {
+        return $this->select($table);
+    }
+
+    public function dump_database(array $tables = []): array
+    {
+        if (empty($tables)) {
+            $tables = array_keys($this->table_schema());
+        }
+
+        $output = [];
+
+        foreach ($tables as $table) {
+            $output[$table] = $this->dump_table(table: $table);
+        }
+
+        return $output;
+    }
+
+    public function load_table(string $table, string | array $data): int
+    {
+        $updateCount = 0;
+
+        if (!$this->valid_schema($table)) {
+            return $updateCount;
+        }
+
+        if (is_string($data)) {
+
+            if (!json_validate($data)) {
+                throw new NestboxException(message: "Invald or malformed JSON string provided.");
+            }
+
+            $data = json_decode($data, associative: true);
+        }
+
+        $data = json_decode($data, associative: true);
+
+        foreach ($data as $row) {
+            $updateCount += $this->insert(table: $table, params: $row, update: true);
+        }
+
+        return $updateCount;
+    }
+
+    public function load_database(string | array $input): int
+    {
+        $updateCount = 0;
+
+        if (is_string($input)) {
+
+            if (!json_validate($input)) {
+                throw new NestboxException(message: "Invald or malformed JSON string provided.");
+            }
+
+            $input = json_decode($input, associative: true);
+        }
+
+        foreach ($input as $table => $data) {
+            $updateCount += $this->load_table(table: $table, data: $data);
+        }
+
+        return $updateCount;
     }
 
     /*
@@ -925,20 +1103,20 @@ class Nestbox
      * Generate HTML code for a two-dimensional array
      *
      * @param string $table
-     * @param string $tblClass
-     * @param array $colClass
+     * @param string $tableClass
+     * @param array $columnClass
      * @return string
      */
-    public static function html_table(string $table, string $tblClass = "", array $colClass = []): string
+    public static function html_table(array $table, string $tableClass = "", array $columnClass = []): string
     {
         // table start
         $code = "";
-        $code .= "<table class='{$tblClass}'>";
+        $code .= "<table class='{$tableClass}'>";
 
         // add headers
         $hdrs = "";
         foreach ($table[0] as $col => $data) {
-            $class = (array_key_exists($col, $colClass)) ? "class='{$colClass[$col]}'" : "";
+            $class = (array_key_exists($col, $columnClass)) ? "class='{$columnClass[$col]}'" : "";
             $hdrs .= "<th {$class}>{$col}</th>";
         }
         $code .= "<tr>{$hdrs}</tr>";
@@ -947,7 +1125,7 @@ class Nestbox
         foreach ($table as $tblRow) {
             $row = "";
             foreach ($tblRow as $col => $val) {
-                $class = (array_key_exists($col, $colClass)) ? "class='{$colClass[$col]}'" : "";
+                $class = (array_key_exists($col, $columnClass)) ? "class='{$columnClass[$col]}'" : "";
                 $row .= "<td {$class}>{$val}</td>";
             }
             $code .= "<tr>{$row}</tr>";
@@ -972,5 +1150,10 @@ class Nestbox
             throw new EmptyParamsException("Missing or empty parameters: {$keys}");
         }
         return true;
+    }
+
+    private function last_id(): int | string | null
+    {
+        return null;
     }
 }
