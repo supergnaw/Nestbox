@@ -7,16 +7,16 @@ Each bird *(class)* in the "nestbox" serves as a way to add specific functionali
 
 | Bird                             | Description |
 |----------------------------------| --- |
-| [Babbler](Babbler/readme.md)     | A flexible content management system designed with basic website/blog editing functioality in mind. |
-| [Bullfinch](Bullfinch/readme.md) | An interface designed to easily create and deploy a simple message board. *(Not yet complete/available)* |
-| [Cuckoo](Cuckoo/readme.md)       | MySQL database in-line encryption for data at rest. *(Not yet complete/available)* |
-| [Lorikeet](Lorikeet/readme.md)   | An image upload processing and indexing. *(Not yet complete/available)* |
-| [Magpie](Magpie/readme.md)       | A user and group permissions manager. |
-| [Nightjar](Nightjar/readme.md)   | TBA |
-| [Swallow](Swallow/readme.md)     | TBA |
-| [Titmouse](Titmouse/readme.md)   | A user management interface that can register/login/logout users while adhering to standard practicces for password handling. |
-| [Waxbill](Waxbill/readme.md)     | TBA |
-| [Weaver](Weaver/readme.md)       | An API endpoint management system for easy REST API building. *(Not yet complete/available)* |
+| [Babbler](src/Babbler/readme.md)     | A flexible content management system designed with basic website/blog editing functioality in mind. |
+| [Bullfinch](src/Bullfinch/readme.md) | An interface designed to easily create and deploy a simple message board. *(Not yet complete/available)* |
+| [Cuckoo](src/Cuckoo/readme.md)       | MySQL database in-line encryption for data at rest. *(Not yet complete/available)* |
+| [Lorikeet](src/Lorikeet/readme.md)   | An image upload processing and indexing. *(Not yet complete/available)* |
+| [Magpie](src/Magpie/readme.md)       | A user and group permissions manager. |
+| [Nightjar](src/Nightjar/readme.md)   | TBA |
+| [Swallow](src/Swallow/readme.md)     | TBA |
+| [Titmouse](src/Titmouse/readme.md)   | A user management interface that can register/login/logout users while adhering to standard practicces for password handling. |
+| [Waxbill](src/Waxbill/readme.md)     | TBA |
+| [Weaver](src/Weaver/readme.md)       | An API endpoint management system for easy REST API building. *(Not yet complete/available)* |
 
 ### Basic Usage
 The Nestbox class was designed for simplistic usage for database interaction while incorporating best practices for safely interacting with the database.
