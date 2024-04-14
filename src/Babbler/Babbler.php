@@ -153,7 +153,7 @@ class Babbler extends Nestbox
             "content" => $content,
             "author" => $author,
         ];
-        if (!self::validate_nonempty_params(params: $optional)) {
+        if (!self::confirm_nonempty_params(params: $optional)) {
             return false;
         }
 

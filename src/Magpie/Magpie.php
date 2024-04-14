@@ -12,6 +12,10 @@ class Magpie extends Nestbox
     // settings variables
     public string $magpieUsersTable = 'users';
     public string $magpieUserColumn = 'username';
+    public string $magpiePermissionsTable = 'magpie_permissions';
+    public string $magpiePermissionAssignmentsTable = 'magpie_permission_assignments';
+    public string $magpieRolesTable = 'magpie_roles';
+    public string $magpieRoleAssignmentsTable = 'magpie_role_assignments';
 
     public function create_tables(): void
     {
@@ -22,7 +26,7 @@ class Magpie extends Nestbox
 
     private function create_class_table_magpie_permissions(): bool
     {
-        $sql = "CREATE TABLE IF NOT EXISTS `magpie_permissions` (
+        $sql = "CREATE TABLE IF NOT EXISTS `{$this->magpiePermissionsTable}` (
                     `permission_id` INT NOT NULL AUTO_INCREMENT ,
                     `permission_name` VARCHAR(63) NOT NULL ,
                     `permission_description` VARCHAR(255) NOT NULL ,
@@ -34,7 +38,7 @@ class Magpie extends Nestbox
 
     private function create_class_table_magpie_permission_assignments(): bool
     {
-        $sql = "CREATE TABLE IF NOT EXISTS `magpie_permission_assignments` (
+        $sql = "CREATE TABLE IF NOT EXISTS `{$this->magpiePermissionAssignmentsTable}` (
                     `assignment_id` INT NOT NULL AUTO_INCREMENT ,
                     `permission_id` INT NOT NULL ,
                     `user_id` VARCHAR( 125 ) NOT NULL ,
@@ -44,14 +48,28 @@ class Magpie extends Nestbox
         return $this->query_execute(query: $sql);
     }
 
-    private function create_class_table_magpie_roles(): void
+    private function create_class_table_magpie_roles(): bool
     {
-        $sql = "";
+        $sql = "CREATE TABLE IF NOT EXISTS `{$this->magpieRolesTable}` (
+                    `role_id` INT NOT NULL AUTO_INCREMENT ,
+                    `role_name` VARCHAR(63) NOT NULL ,
+                    `role_description` VARCHAR(255) NOT NULL ,
+                    PRIMARY KEY (`role_id`)) ENGINE = InnoDB; 
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+
+        return $this->query_execute(query: $sql);
     }
 
-    private function create_class_table_magpie_role_assignments(): void
+    private function create_class_table_magpie_role_assignments(): bool
     {
+        $sql = "CREATE TABLE IF NOT EXISTS `{$this->magpieRoleAssignmentsTable}` (
+                    `assignment_id` INT NOT NULL AUTO_INCREMENT ,
+                    `permission_id` INT NOT NULL ,
+                    `user_id` VARCHAR( 125 ) NOT NULL ,
+                    PRIMARY KEY ( `assignment_id` )
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
 
+        return $this->query_execute(query: $sql);
     }
 
     public function permission_create(): bool
