@@ -77,8 +77,8 @@ trait SchemaTrait
     {
         if (empty($this->tableSchema)) $this->load_table_schema();
 
-        $table = $this->valid_schema_string($table);
-        $col = ($col = trim($col ?? "")) ? $this->valid_schema_string($col) : $col;
+        $table = $this::valid_schema_string($table);
+        $col = ($col = trim($col ?? "")) ? $this::valid_schema_string($col) : $col;
 
         // check table
         if (!array_key_exists($table, $this->tableSchema)) {
@@ -136,7 +136,7 @@ trait SchemaTrait
         return in_array(needle: $trigger, haystack: $this->triggerSchema[$table] ?? []);
     }
 
-    public function valid_schema_string(string $string): string
+    static public function valid_schema_string(string $string): string
     {
         if (!preg_match(pattern: "/^\w+$/i", subject: trim($string), matches: $matches)) {
             throw new InvalidSchemaSyntaxException($string);

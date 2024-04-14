@@ -6,12 +6,15 @@ namespace Supergnaw\Nestbox;
 
 use Supergnaw\Nestbox\Exception\EmptyParamsException;
 use Supergnaw\Nestbox\Exception\InvalidColumnException;
+use Supergnaw\Nestbox\Exception\InvalidSchemaSyntaxException;
 use Supergnaw\Nestbox\Exception\InvalidTableException;
 
 trait QuickQueriesTrait
 {
 
     /**
+     * Inserts one or more rows with data `$params`
+     *
      * @param string $table
      * @param array $params
      * @param bool $update
@@ -20,9 +23,9 @@ trait QuickQueriesTrait
     public function insert(string $table, array $params, bool $update = true): int
     {
         // verify table
-        if (!$this->valid_schema($table)) throw new InvalidTableException($table);
+        if (!$this::valid_schema_string($table)) throw new InvalidSchemaSyntaxException($table);
 
-        if (empty($params)) throw new EmptyParamsException("Cannot insert no values into table.");
+        if (empty($params)) throw new EmptyParamsException("Cannot insert empty data into table.");
 
         $multipleRows = false;
 
@@ -97,21 +100,26 @@ trait QuickQueriesTrait
     }
 
     /**
+     * Updates rows in `$table` with `$params` that match `$where` conditions
+     *
      * @param string $table
      * @param array $params
      * @param array $where
      * @param string $conjunction
-     * @return int
+     * @return int|bool
      */
     public function update(string $table, array $params, array $where, string $conjunction): int|bool
     {
-        if (!$table = $this->valid_schema_string($table)) throw new InvalidTableException($table);
+        if (!$table = $this::valid_schema_string($table)) throw new InvalidTableException($table);
 
-        $params = $this->sanitize_paramaters($params);
-        $where = $this->sanitize_paramaters($where);
+        $params = $this::validate_parameters($query, $params);
 
-        $updates = $this->compile_paramaterized_fields($params, "", true);
-        $wheres = $this->compile_paramaterized_fields($where, $conjunction);
+        if (!$params) throw new EmptyParamsException("Cannot update with empty data.");
+
+        $where = $this::sanitize_parameters($where);
+
+        $updates = $this::compile_parameterized_fields($params, "", true);
+        $wheres = $this::compile_parameterized_fields($where, $conjunction);
 
         if (!$this->query_execute("UPDATE `{$table}` SET {$updates} WHERE {$wheres};", $params)) return false;
 
@@ -119,17 +127,19 @@ trait QuickQueriesTrait
     }
 
     /**
+     * Deletes rows that match `$where` conditions
+     *
      * @param string $table
      * @param array $where
      * @param $conjunction
-     * @return int
+     * @return int|bool
      */
     public function delete(string $table, array $where, $conjunction = "AND"): int|bool
     {
-        if (!$table = $this->valid_schema_string($table)) throw new InvalidTableException($table);
+        if (!$table = $this::valid_schema_string($table)) throw new InvalidTableException($table);
 
-        $params = $this->sanitize_paramaters($where);
-        $wheres = $this->compile_paramaterized_fields($params, $conjunction);
+        $params = $this::sanitize_parameters($where);
+        $wheres = $this::compile_parameterized_fields($params, $conjunction);
 
         if (!$this->query_execute("DELETE FROM `{$table}` WHERE {$wheres};", $params)) return false;
 
@@ -137,33 +147,24 @@ trait QuickQueriesTrait
     }
 
     /**
+     * Selects all rows in `$table` or only ones that match `$where` conditions
+     *
      * @param string $table
      * @param array $where
      * @param string $conjunction
-     * @return array
+     * @return array|bool
      */
     public function select(string $table, array $where = [], string $conjunction = "AND"): array|bool
     {
-        if (!$table = $this->valid_schema_string($table)) throw new InvalidTableException($table);
+        if (!$table = $this::valid_schema_string($table)) throw new InvalidTableException($table);
 
-        $params = $this->sanitize_paramaters($where);
-        $wheres = $this->compile_paramaterized_fields($params, $conjunction);
+        $params = $this::sanitize_parameters($where);
+        $wheres = $this::compile_parameterized_fields($params, $conjunction);
 
         $sql = ($wheres) ? "SELECT * FROM `{$table}` WHERE {$wheres};" : "SELECT * FROM `{$table}`;";
 
         if (!$this->query_execute($sql, $params)) return false;
 
         return $this->results();
-    }
-
-    public function rename_table(string $oldTable, string $newTable): bool
-    {
-        if (!$this->valid_schema($oldTable)) throw new InvalidTableException($oldTable);
-
-        if ($this->valid_schema($newTable)) throw new DuplicateTableException($newTable);
-
-        if (!$newTable = $this->valid_schema_string($newTable)) return false;
-
-        return $this->query_execute("RENAME TABLE `{$oldTable}` TO `{$newTable}`;");
     }
 }

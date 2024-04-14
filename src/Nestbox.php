@@ -35,10 +35,6 @@ class Nestbox
     protected string $pass = '';
     protected string $name = '';
 
-    // handler properties
-
-    // database properties
-
     // query information
     protected array $results = [];
 
@@ -67,6 +63,10 @@ class Nestbox
         if ($pass && !$this->pass = $pass) throw new MissingDatabasePassException();
         if ($name && !$this->name = $name) throw new MissingDatabaseNameException();
 
+        // make sure class tables have been created
+        $this->check_class_tables();
+
+        // load settings
         $this->load_settings();
     }
 
@@ -103,12 +103,9 @@ class Nestbox
         $this->close();
     }
 
-    protected function create_class_tables(): void
-    {
-        foreach (get_class_methods($this) as $methodName) {
-            if (str_starts_with(haystack: $methodName, needle: "create_class_table_")) $this->$methodName();
-        }
-    }
+    use InputValidationTrait;
+
+    use ClassTablesTrait;
 
     // Database Connections
     use ConnectionsTrait;

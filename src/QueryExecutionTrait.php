@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Supergnaw\Nestbox;
 
 use PDO;
+use PDOException;
 use PDOStatement;
 use Supergnaw\Nestbox\Exception\CannotBindArrayException;
 use Supergnaw\Nestbox\Exception\EmptyParamsException;
@@ -16,6 +17,7 @@ use Supergnaw\Nestbox\Exception\QueryErrorException;
 trait QueryExecutionTrait
 {
     protected PDOStatement $stmt;
+
     /**
      * Executes a query against the database
      *
@@ -39,7 +41,7 @@ trait QueryExecutionTrait
         }
 
         // parameter validation
-        $params = $this->validate_parameters($query, $params);
+        $params = $this::remove_unused_parameters($query, $params);
 
         // connect to database
         $this->connect();
@@ -59,60 +61,22 @@ trait QueryExecutionTrait
             return $result;
         } catch (InvalidTableException $tableName) {
             // if it's a class table, try to create it and reattempt query execution
-            if (str_starts_with($table, $this::PACKAGE_NAME) && $retry) {
+            if (str_starts_with($tableName->getMessage(), $this::PACKAGE_NAME) && $retry) {
                 $this->create_class_tables();
                 return $this->query_execute($query, $params, $close, retry: false);
             }
 
-            throw new InvalidTableException($tableName);
+            throw new InvalidTableException($tableName->getMessage());
         }
     }
 
-    protected function sanitize_paramaters(array $params): array
-    {
-        $output = [];
-
-        foreach ($params as $col => $val) $output[$this->valid_schema_string($col)] = $val;
-
-        return $output;
-    }
-
-    /**
-     * Searches for paramater :names in a query and removes unused column => value pairs
-     *
-     * @param string $query
-     * @param array $params
-     * @return array
-     */
-    protected function verify_parameters(string $query, array $params): array
-    {
-        foreach ($params as $var => $val) {
-            // remove unwanted parameters
-            if (!strpos($query, ":{$var}")) {
-                unset($params[$var]);
-            }
-        }
-        return $params;
-    }
-
-    protected function validate_parameters(string $query, array $params): array
-    {
-        $output = [];
-
-        foreach ($params as $key => $value) {
-            $key = $this->valid_schema_string($key);
-            if (strpos($query, ":$key")) $output[$key] = $value;
-        }
-
-        return $output;
-    }
 
     public static function confirm_nonempty_params(array $params): bool
     {
         $empty = [];
 
         foreach ($params as $param => $value) {
-            if (isset($param)) if (!empty(trim("{$value}"))) continue;
+            if (isset($param)) if (!empty(trim($value))) continue;
             $empty[] = $param;
         }
 
@@ -129,28 +93,11 @@ trait QueryExecutionTrait
         return null;
     }
 
-    protected function compile_paramaterized_fields(array $params, string $conjunction = "AND", bool $useComma = false): string
-    {
-        $output = [];
-
-        foreach ($params as $key => $value) $output[] = "`$key` = :$key";
-
-        if ($useComma) {
-            $sep = ",";
-        } else {
-            $sep = (
-            preg_match("/^(and|or)$/i", trim($conjunction), $con)
-            ) ? strtoupper($con[0]) : "AND";
-        }
-
-        return ($output) ? implode(" $sep ", $output) : "";
-    }
-
     /**
      * Prepare a query into a statement
      *
      * @param string $query
-     * @param array|null $params
+     * @param array|$params
      * @return bool
      */
     protected function prep(string $query, array $params = []): bool
@@ -177,11 +124,11 @@ trait QueryExecutionTrait
         // set binding type
         $type = Nestbox::check_variable_type($value);
         if ("array" == $type) {
-            throw new CannotBindArrayException("Cannot bind array type to :{$variable}");
+            throw new CannotBindArrayException($variable);
         }
 
         // backwards compatibility or whatever
-        $variable = (!str_starts_with($variable, ':')) ? ":{$variable}" : $variable;
+        $variable = (!str_starts_with($variable, ':')) ? ":$variable" : $variable;
 
         // bind value to parameter
         if (true === $this->stmt->bindValue($variable, $value, $type)) {
@@ -189,7 +136,7 @@ trait QueryExecutionTrait
         }
 
         // we didn't do it
-        throw new FailedToBindValueException("Failed to bind '{$value}' to :{$variable} ({$type})");
+        throw new FailedToBindValueException("$variable => ($type) $value");
     }
 
     /**
@@ -218,11 +165,10 @@ trait QueryExecutionTrait
         try {
             if (!$this->stmt->execute()) {
                 $error = $this->stmt->errorInfo();
-                throw new QueryErrorException("MySQL error {$error[1]}: {$error[2]} ({$error[0]})");
+                throw new QueryErrorException("MySQL error $error[1]: $error[2] ($error[0])");
             }
         } catch (PDOException $e) {
-            $msg = $e->getMessage();
-            throw new PDOException("PDO Exception: {$msg}");
+            throw new PDOException("PDO Exception: {$e->getMessage()}");
         }
         return true;
     }
