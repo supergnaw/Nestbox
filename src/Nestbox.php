@@ -103,8 +103,10 @@ class Nestbox
         $this->close();
     }
 
+    // Input Validation
     use InputValidationTrait;
 
+    // Class Tables Generation
     use ClassTablesTrait;
 
     // Database Connections

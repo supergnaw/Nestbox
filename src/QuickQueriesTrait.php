@@ -13,7 +13,7 @@ trait QuickQueriesTrait
 {
 
     /**
-     * Inserts one or more rows with data `$params`
+     * Inserts one or more rows of data `$params`
      *
      * @param string $table
      * @param array $params
@@ -100,6 +100,29 @@ trait QuickQueriesTrait
     }
 
     /**
+     * Selects all rows in `$table` or only ones that match `$where` conditions
+     *
+     * @param string $table
+     * @param array $where
+     * @param string $conjunction
+     * @return array|bool
+     */
+    public function select(string $table, array $where = [], string $conjunction = "AND"): array|bool
+    {
+        if (!$table = $this::valid_schema_string($table)) throw new InvalidTableException($table);
+
+        $sql = ($where) ? "SELECT * FROM $table WHERE " : "SELECT * FROM TABLE `$table`;";
+
+        list($where, $params) = $this::compile_where_clause($sql, $where);
+
+        if ($where) $sql .= $where;
+
+        if (!$this->query_execute($sql, $params)) return false;
+
+        return $this->results();
+    }
+
+    /**
      * Updates rows in `$table` with `$params` that match `$where` conditions
      *
      * @param string $table
@@ -108,18 +131,21 @@ trait QuickQueriesTrait
      * @param string $conjunction
      * @return int|bool
      */
-    public function update(string $table, array $params, array $where, string $conjunction): int|bool
+    public function update(string $table, array $updates, array $where = [], string $conjunction = "AND"): int|bool
     {
         if (!$table = $this::valid_schema_string($table)) throw new InvalidTableException($table);
 
-        $params = $this::validate_parameters($query, $params);
+        $sql = "UPDATE `{$table}` SET {$updates} WHERE {$wheres}";
+
+        $setClause = $this::compile_parameterized_fields($updates, "", true);
+
+        $params = $this::validate_parameters($sql, $params, $conjunction);
 
         if (!$params) throw new EmptyParamsException("Cannot update with empty data.");
 
-        $where = $this::sanitize_parameters($where);
+        list($where, $wParams) = $this::compile_where_clause($where);
 
-        $updates = $this::compile_parameterized_fields($params, "", true);
-        $wheres = $this::compile_parameterized_fields($where, $conjunction);
+        $wheres = $this::compile_parameterized_fields($query, $where, $conjunction);
 
         if (!$this->query_execute("UPDATE `{$table}` SET {$updates} WHERE {$wheres};", $params)) return false;
 
@@ -144,27 +170,5 @@ trait QuickQueriesTrait
         if (!$this->query_execute("DELETE FROM `{$table}` WHERE {$wheres};", $params)) return false;
 
         return $this->row_count();
-    }
-
-    /**
-     * Selects all rows in `$table` or only ones that match `$where` conditions
-     *
-     * @param string $table
-     * @param array $where
-     * @param string $conjunction
-     * @return array|bool
-     */
-    public function select(string $table, array $where = [], string $conjunction = "AND"): array|bool
-    {
-        if (!$table = $this::valid_schema_string($table)) throw new InvalidTableException($table);
-
-        $params = $this::sanitize_parameters($where);
-        $wheres = $this::compile_parameterized_fields($params, $conjunction);
-
-        $sql = ($wheres) ? "SELECT * FROM `{$table}` WHERE {$wheres};" : "SELECT * FROM `{$table}`;";
-
-        if (!$this->query_execute($sql, $params)) return false;
-
-        return $this->results();
     }
 }

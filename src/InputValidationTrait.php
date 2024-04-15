@@ -106,6 +106,34 @@ trait InputValidationTrait
         return ($output) ? implode(" $sep ", $output) : "";
     }
 
+    public static function compile_values_clause(array $params): array
+    {
+        $cols = [];
+        $output = [];
+
+        foreach ($params as $column => $value) {
+            if (!$column = self::valid_schema_string($column)) throw new InvalidSchemaSyntaxException($column);
+
+        }
+
+        return [];
+    }
+
+    public static function compile_set_clause(array $params): array
+    {
+        $sets = [];
+        $output = [];
+
+        foreach ($params as $column => $value) {
+            if (!$column = self::valid_schema_string($column)) throw new InvalidSchemaSyntaxException($column);
+
+            $sets[] = "`$column` = :$column";
+            $output[$column] = $value;
+        }
+
+        return [implode(", ", $sets), $output];
+    }
+
     public static function compile_where_clause(string $query, array $where, string $conjunction = "AND"): array
     {
         $conjunction = self::sanitize_conjunction($conjunction);
@@ -120,9 +148,9 @@ trait InputValidationTrait
 
             if (!$column = self::valid_schema_string($column)) throw new InvalidSchemaSyntaxException($column);
 
-            if ($exists = substr_count($query, ":$column")) {
-                while (array_key_exists("{$column}_$exists", $params)) $exists++;
-                $column = "{$column}_$exists";
+            if ($count = substr_count($query, ":$column")) {
+                while (array_key_exists("{$column}_$count", $params)) $count++;
+                $column = "{$column}_$count";
             }
 
             $wheres[] = "`$column` $operator :$column";
@@ -130,14 +158,12 @@ trait InputValidationTrait
 
         }
 
-        $wheres = implode($conjunction, $wheres);
-
-        return [$wheres, $params];
+        return [implode($conjunction, $wheres), $params];
     }
 
     public static function parse_where_operator(string $input): array|bool
     {
-        if (!preg_match('/^(\w+)\s([<!=>]+|between|like|in)/i', $input, $matches)) {
+        if (!preg_match('/^(\w+)\s([<!=>]{1,2}|between|like|in)$/i', $input, $matches)) {
             $matches = [$input, self::valid_schema_string($input), "="];
         }
 
