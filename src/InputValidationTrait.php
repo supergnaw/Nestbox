@@ -106,17 +106,29 @@ trait InputValidationTrait
         return ($output) ? implode(" $sep ", $output) : "";
     }
 
-    public static function compile_values_clause(array $params): array
+
+    public static function compile_column_list(array $params): array
     {
-        $cols = [];
-        $output = [];
+        return (is_array(current($params))) ? array_keys(current($params)) : array_keys($params);
+    }
 
-        foreach ($params as $column => $value) {
-            if (!$column = self::valid_schema_string($column)) throw new InvalidSchemaSyntaxException($column);
+    public static function compile_values_list(array $params): array
+    {
+        $namedParams = [];
+        $namedFields = [];
 
+        if (!is_array(current($params))) $params = [$params];
+
+        foreach ($params as $row => $values) {
+            $fields = [];
+            foreach ($values as $col => $val) {
+                $namedParams["{$col}_$row"] = $val;
+                $fields[] = "{$col}_$row";
+            }
+            $namedFields[] = ":" . implode(", :", $fields);
         }
 
-        return [];
+        return [$namedFields, $namedParams];
     }
 
     public static function compile_set_clause(array $params): array
@@ -132,6 +144,17 @@ trait InputValidationTrait
         }
 
         return [implode(", ", $sets), $output];
+    }
+
+    public static function compile_update_list(string $table, array $columns, string $primaryKey): array
+    {
+        $updates = [];
+
+        foreach ($columns as $column) {
+            if ($column != $primaryKey) $updates[] = "`$table`.`$column` = `new`.`$column`";
+        }
+
+        return $updates;
     }
 
     public static function compile_where_clause(string $query, array $where, string $conjunction = "AND"): array

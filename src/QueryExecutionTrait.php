@@ -155,7 +155,7 @@ trait QueryExecutionTrait
     }
 
     /**
-     * Execute a statement
+     * Execute a statement or throws either a QueryErrorException or a PDOException
      *
      * @return bool
      */
@@ -163,13 +163,11 @@ trait QueryExecutionTrait
     {
         // execute query
         try {
-            if (!$this->stmt->execute()) {
-                $error = $this->stmt->errorInfo();
-                throw new QueryErrorException("MySQL error $error[1]: $error[2] ($error[0])");
-            }
+            if ($this->stmt->execute()) return true;
+            $error = $this->stmt->errorInfo();
+            throw new QueryErrorException("MySQL error $error[1]: $error[2] ($error[0])");
         } catch (PDOException $e) {
             throw new PDOException("PDO Exception: {$e->getMessage()}");
         }
-        return true;
     }
 }
