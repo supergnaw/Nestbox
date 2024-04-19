@@ -20,52 +20,52 @@ class Titmouse extends Nestbox
     public function create_class_table_titmouse_users(): bool
     {
         // check if user table exists
-        if (!$this->valid_schema($this->usersTable)) {
-            $sql = "CREATE TABLE IF NOT EXISTS `{$this->usersTable}` (
-                    `{$this->userColumn}` VARCHAR ( 64 ) NOT NULL PRIMARY KEY,
-                    `{$this->mailColumn}` VARCHAR( 320 ) NOT NULL UNIQUE,
-                    `{$this->hashColumn}` VARCHAR( 128 ) NOT NULL ,
+        if (!$this->valid_schema($this->titmouseUsersTable)) {
+            $sql = "CREATE TABLE IF NOT EXISTS `{$this->titmouseUsersTable}` (
+                    `{$this->titmouseUserColumn}` VARCHAR ( $this->titmouseNameLength ) NOT NULL PRIMARY KEY,
+                    `{$this->titmouseMailColumn}` VARCHAR( 320 ) NOT NULL UNIQUE,
+                    `{$this->titmouseHashColumn}` VARCHAR( 128 ) NOT NULL ,
                     `last_login` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
                     `created` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ,
-                    UNIQUE ( `{$this->mailColumn}` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                    UNIQUE ( `{$this->titmouseMailColumn}` )
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
             return $this->query_execute($sql);
         }
 
         // add columns if missing from an existing table
         // TODO: add schema check for column type and size and adjust as necessary
         $this->load_table_schema();
-        if (!$this->valid_schema($this->usersTable, $this->userColumn)) {
-            $sql = "ALTER TABLE `{$this->usersTable}` ADD COLUMN `{$this->userColumn}` VARCHAR ( 64 ) NOT NULL";
+        if (!$this->valid_schema($this->titmouseUsersTable, $this->titmouseUserColumn)) {
+            $sql = "ALTER TABLE `{$this->titmouseUsersTable}` ADD COLUMN `{$this->titmouseUserColumn}` VARCHAR ( 64 ) NOT NULL";
             if (!$this->query_execute($sql)) {
-                throw new TitmouseException("failed to add column '{$this->userColumn}'");
+                throw new TitmouseException("failed to add column '{$this->titmouseUserColumn}'");
             };
         }
 
-        if (!$this->valid_schema($this->usersTable, $this->mailColumn)) {
-            $sql = "ALTER TABLE `{$this->usersTable}` ADD COLUMN `{$this->mailColumn}` VARCHAR ( 320 ) NOT NULL;
-                    ALTER TABLE `{$this->usersTable}` ADD CONSTRAINT `unique_email` UNIQUE ( `{$this->mailColumn}` );";
+        if (!$this->valid_schema($this->titmouseUsersTable, $this->titmouseMailColumn)) {
+            $sql = "ALTER TABLE `{$this->titmouseUsersTable}` ADD COLUMN `{$this->titmouseMailColumn}` VARCHAR ( 320 ) NOT NULL;
+                    ALTER TABLE `{$this->titmouseUsersTable}` ADD CONSTRAINT `unique_email` UNIQUE ( `{$this->titmouseMailColumn}` );";
             if (!$this->query_execute($sql)) {
-                throw new TitmouseException("failed to add column '{$this->mailColumn}'");
+                throw new TitmouseException("failed to add column '{$this->titmouseMailColumn}'");
             };
         }
 
-        if (!$this->valid_schema($this->usersTable, $this->hashColumn)) {
-            $sql = "ALTER TABLE `{$this->usersTable}` ADD COLUMN `{$this->hashColumn}` VARCHAR ( 128 ) NOT NULL";
+        if (!$this->valid_schema($this->titmouseUsersTable, $this->titmouseHashColumn)) {
+            $sql = "ALTER TABLE `{$this->titmouseUsersTable}` ADD COLUMN `{$this->titmouseHashColumn}` VARCHAR ( 128 ) NOT NULL";
             if (!$this->query_execute($sql)) {
-                throw new TitmouseException("failed to add column '{$this->hashColumn}'");
+                throw new TitmouseException("failed to add column '{$this->titmouseHashColumn}'");
             };
         }
 
-        if (!$this->valid_schema($this->usersTable, "last_login")) {
-            $sql = "ALTER TABLE `{$this->usersTable}` ADD COLUMN `last_login` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP";
+        if (!$this->valid_schema($this->titmouseUsersTable, "last_login")) {
+            $sql = "ALTER TABLE `{$this->titmouseUsersTable}` ADD COLUMN `last_login` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP";
             if (!$this->query_execute($sql)) {
                 throw new TitmouseException("failed to add column 'last_login'");
             };
         }
 
-        if (!$this->valid_schema($this->usersTable, "created")) {
-            $sql = "ALTER TABLE `{$this->usersTable}` ADD COLUMN `created` TIMESTAMP DEFAULT CURRENT_TIMESTAMP";
+        if (!$this->valid_schema($this->titmouseUsersTable, "created")) {
+            $sql = "ALTER TABLE `{$this->titmouseUsersTable}` ADD COLUMN `created` TIMESTAMP DEFAULT CURRENT_TIMESTAMP";
             if (!$this->query_execute($sql)) {
                 throw new TitmouseException("failed to add column 'created'");
             };
@@ -80,16 +80,16 @@ class Titmouse extends Nestbox
         // validate user data columns
         $params = [];
         foreach ($userData as $col => $val) {
-            if (!$this->valid_schema($this->usersTable, $col)) continue;
+            if (!$this->valid_schema($this->titmouseUsersTable, $col)) continue;
             $params[$col] = $val;
         }
 
         // make sure input vars are not too long
-        if ($this->nameLength < strlen($params[$this->userColumn])) {
+        if ($this->titmouseNameLength < strlen($params[$this->titmouseUserColumn])) {
             throw new TitmouseException("Username too long.");
         }
 
-        if (320 < strlen($params[$this->mailColumn])) {
+        if (320 < strlen($params[$this->titmouseMailColumn])) {
             // thank you RFC 5321 & RFC 5322
             throw new TitmouseException("Email too long.");
         }
@@ -99,10 +99,10 @@ class Titmouse extends Nestbox
         }
 
         // securely hash the password
-        $params[$this->hashColumn] = password_hash($password, PASSWORD_DEFAULT);
+        $params[$this->titmouseHashColumn] = password_hash($password, PASSWORD_DEFAULT);
 
         // insert new user
-        if (1 === $this->insert($this->usersTable, $params)) {
+        if (1 === $this->insert($this->titmouseUsersTable, $params)) {
             return true;
         } else {
             return false;
@@ -111,7 +111,7 @@ class Titmouse extends Nestbox
 
     public function select_user(string $user): array
     {
-        $results = $this->select($this->usersTable, [$this->userColumn => $user]);
+        $results = $this->select($this->titmouseUsersTable, [$this->titmouseUserColumn => $user]);
 
         // invalid user
         if (!$results) {
@@ -132,13 +132,13 @@ class Titmouse extends Nestbox
         $user = $this->select_user($user);
 
         // login failed
-        if (!password_verify($password, $user[$this->hashColumn])) {
+        if (!password_verify($password, $user[$this->titmouseHashColumn])) {
             throw new TitmouseException("Invalid username or password.");
         }
 
         // rehash password if newer algorithm is available
-        if (password_needs_rehash($user[$this->hashColumn], PASSWORD_DEFAULT)) {
-            $this->change_password($user[$this->userColumn], $password);
+        if (password_needs_rehash($user[$this->titmouseHashColumn], PASSWORD_DEFAULT)) {
+            $this->change_password($user[$this->titmouseUserColumn], $password);
         }
 
         if (true === $loadToSession) {
@@ -150,13 +150,15 @@ class Titmouse extends Nestbox
 
     public function update_user(string $user, array $userData): int
     {
-        return $this->update(table: $this->usersTable, params: $userData, where: [$this->userColumn => $user]);
+        $where = [$this->titmouseUserColumn => $user];
+
+        return $this->update(table: $this->titmouseUsersTable, updates: $userData, where: $where);
     }
 
     public function load_user_session(array $userData): void
     {
         foreach ($userData as $col => $val) {
-            $_SESSION[$this->sessionKey][$col] = $val;
+            $_SESSION[$this->titmouseSessionKey][$col] = $val;
         }
     }
 
@@ -170,11 +172,11 @@ class Titmouse extends Nestbox
         $newHashword = password_hash($newPassword, PASSWORD_DEFAULT);
 
         $userData = [
-            $this->userColumn => $user,
-            $this->hashColumn => $newHashword
+            $this->titmouseUserColumn => $user,
+            $this->titmouseHashColumn => $newHashword
         ];
 
-        if (1 != $this->update_user($userData[$this->userColumn], $userData)) {
+        if (1 != $this->update_user($userData[$this->titmouseUserColumn], $userData)) {
             throw new TitmouseException("Failed to update password hash.");
         }
 
@@ -184,6 +186,6 @@ class Titmouse extends Nestbox
     public function logout_user(): void
     {
         // clear out those session variables
-        unset($_SESSION[$this->sessionKey]);
+        unset($_SESSION[$this->titmouseSessionKey]);
     }
 }

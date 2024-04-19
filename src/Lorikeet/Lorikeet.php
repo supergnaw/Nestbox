@@ -34,7 +34,7 @@ class Lorikeet extends Nestbox
                     `edited` TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP ,
                     `tags` MEDIUMTEXT NOT NULL ,
                     PRIMARY KEY ( `image_id` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 
         return $this->query_execute($sql);
     }

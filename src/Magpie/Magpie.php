@@ -31,7 +31,7 @@ class Magpie extends Nestbox
                     `permission_name` VARCHAR(63) NOT NULL ,
                     `permission_description` VARCHAR(255) NOT NULL ,
                     PRIMARY KEY (`permission_id`)) ENGINE = InnoDB; 
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 
         return $this->query_execute(query: $sql);
     }
@@ -43,7 +43,7 @@ class Magpie extends Nestbox
                     `permission_id` INT NOT NULL ,
                     `user_id` VARCHAR( 125 ) NOT NULL ,
                     PRIMARY KEY ( `assignment_id` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 
         return $this->query_execute(query: $sql);
     }
@@ -55,7 +55,7 @@ class Magpie extends Nestbox
                     `role_name` VARCHAR(63) NOT NULL ,
                     `role_description` VARCHAR(255) NOT NULL ,
                     PRIMARY KEY (`role_id`)) ENGINE = InnoDB; 
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 
         return $this->query_execute(query: $sql);
     }
@@ -67,7 +67,7 @@ class Magpie extends Nestbox
                     `permission_id` INT NOT NULL ,
                     `user_id` VARCHAR( 125 ) NOT NULL ,
                     PRIMARY KEY ( `assignment_id` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 
         return $this->query_execute(query: $sql);
     }

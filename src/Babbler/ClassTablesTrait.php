@@ -26,7 +26,7 @@ trait ClassTablesTrait
                     `title` VARCHAR( {$this->babblerTitleSize} ) NOT NULL ,
                     `content` MEDIUMTEXT NOT NULL ,
                     PRIMARY KEY ( `entry_id` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
         return $this->query_execute($sql);
     }
 
@@ -52,7 +52,7 @@ trait ClassTablesTrait
                     `title` VARCHAR( {$this->babblerTitleSize} ) NOT NULL ,
                     `content` MEDIUMTEXT NOT NULL ,
                     PRIMARY KEY ( `history_id` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 
         if (!$this->query_execute($sql)) return false;
 

@@ -9,11 +9,13 @@ trait EntrySearchTrait
     // search entries
     public function search_entries_exact(string $search, string $category = "*"): array
     {
-        $where = ["content" => trim($search)];
+        $where = ["content LIKE" => "%" . trim($search) . "%"];
+
         if ("*" != $category) $where["category"] = $category;
 
         return $this->select("babbler_entries", $where);
     }
+
     public function search_entries_fuzzy(string $search, string $category = "*"): array
     {
         $search = $this->sanitize_search_string($search);
@@ -24,46 +26,53 @@ trait EntrySearchTrait
         if ("*" != $category) $where["category"] = trim($category);
 
         return $this->select("babbler_entries", $where);
-
-//        $words = explode(" ", $words);
-//        $pattern = ".{0,$buffer}";
-//        for ($i = 0; $i < count($words); $i++) {
-//            $pattern .= (!empty($words[$i + 1]) ?? '') ? "$words[$i].*?(?!={$words[$i+1]})" : $words[$i];
-//        }
-//        $pattern .= ".{0,$buffer}";
-//        $highlight = '/(' . implode(separator: '|', array: $words) . ')/i';
-//
-//        $sql = "SELECT * FROM `babbler_entries`
-//                WHERE `content` RLIKE \"{$pattern}\";";
-//        $this->query_execute($sql, $params);
-//        $results = $this->results();
-//        foreach ($results as $key => $result) {
-//            preg_match(pattern: "/$pattern/i", subject: $result['content'], matches: $matches);
-//            $results[$key]["matches"] = "..." . preg_replace(pattern: $highlight, replacement: '<strong>$1</strong>', subject: $matches[0]) . "...";
-//        }
-//        return $results;
     }
 
-    public function search_entries_threshold(string $words, string $category = "*", int $threshold = 100): array
+    public function search_entries_threshold(string $words, string $category = "*"): array
     {
-        return [];
+        $cases = [];
+
+        foreach (explode(" ", $this->sanitize_search_string($words)) as $word) {
+            $word = preg_replace("/[^\w]+/", "", $word);
+
+            $cases[] = "CASE WHEN FIND IN SET('$word', `content`) > 0 THEN 1 ELSE 0 END";
+        }
+
+        $cases = implode(" + ", $cases);
+
+        $sql = "SELECT *, SUM($cases) AS 'threshold' FROM `babbler_entries`;";
+
+        if (!$this->query_execute($sql)) return [];
+
+        return $this->results();
+    }
+
+    public function search_entries_regex(string $pattern, string $category = "*"): array
+    {
+        $sql = "SELECT * FROM `babbler_entries` WHERE REGEXP :pattern";
+
+        $params = ["pattern" => $pattern];
+
+        if (!$this->query_execute($sql, $params)) return [];
+
+        return $this->results();
     }
 
     // find exact title
     public function search_title(string $title): array
     {
-        $sql = "SELECT * FROM `babbler_entries` WHERE `title` = :title;";
-        $params = ["title" => $title];
-        return ($this->query_execute($sql, $params)) ? $this->results() : [];
+        $title = $this->sanitize_search_string($title);
+
+        return $this->select("babbler_entries", ["title LIKE" => "%$title%"]);
     }
 
-    public function search_url_title(string $title): array
-    {
-        $sql = "SELECT * FROM `babbler_entries` WHERE `title` LIKE :title;";
-        $title = implode(separator: "%", array: preg_split(pattern: "/[^\w]+/", subject: trim($title)));
-        $params = ["title" => $title];
-        return ($this->query_execute($sql, $params)) ? $this->results() : [];
-    }
+//    public function search_url_title(string $title): array
+//    {
+//        $sql = "SELECT * FROM `babbler_entries` WHERE `title` LIKE :title;";
+//        $title = implode(separator: "%", array: preg_split(pattern: "/[^\w]+/", subject: trim($title)));
+//        $params = ["title" => $title];
+//        return ($this->query_execute($sql, $params)) ? $this->results() : [];
+//    }
 
     public function sanitize_search_string(string $string): string
     {

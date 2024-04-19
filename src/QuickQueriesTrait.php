@@ -63,7 +63,7 @@ trait QuickQueriesTrait
      */
     public function update(string $table, array $updates, array $where = [], string $conjunction = "AND"): int|bool
     {
-        if ($this->valid_schema($table)) throw new InvalidTableException($table);
+        if (!$this->valid_schema($table)) throw new InvalidTableException($table);
 
         list($updates, $updateParams) = $this::compile_set_clause($updates);
 
@@ -88,7 +88,7 @@ trait QuickQueriesTrait
      */
     public function select(string $table, array $where = [], string $conjunction = "AND"): array|bool
     {
-        if ($this->valid_schema($table)) throw new InvalidTableException($table);
+        if (!$this->valid_schema($table)) throw new InvalidTableException($table);
 
         $sql = "SELECT * FROM `$table`";
 
@@ -109,7 +109,7 @@ trait QuickQueriesTrait
      */
     public function delete(string $table, array $where, string $conjunction = "AND", bool $deleteAll = false): int|bool
     {
-        if ($this->valid_schema($table)) throw new InvalidTableException($table);
+        if (!$this->valid_schema($table)) throw new InvalidTableException($table);
 
         $sql = "DELETE FROM `$table`";
 

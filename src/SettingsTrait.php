@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Supergnaw\Nestbox;
 
+use Supergnaw\Nestbox\Exception\InvalidTableException;
+
 trait SettingsTrait
 {
+    public const string nestbox_settings_table = 'nestbox_settings';
+
     protected function create_class_table_nestbox_settings(): bool
     {
         $sql = "CREATE TABLE IF NOT EXISTS `nestbox_settings` (
@@ -14,7 +18,7 @@ trait SettingsTrait
                     `setting_type` VARCHAR( 64 ) NOT NULL ,
                     `setting_value` VARCHAR( 128 ) NULL ,
                     PRIMARY KEY ( `setting_name` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 
         return $this->query_execute($sql);
     }
@@ -23,7 +27,14 @@ trait SettingsTrait
     {
         $where = ['package_name' => self::PACKAGE_NAME];
 
-        $settings = $this->parse_settings($this->select(table: 'nestbox_settings', where: $where));
+        try {
+            $settings = $this->parse_settings($this->select(table: $this::nestbox_settings_table, where: $where));
+        } catch (InvalidTableException) {
+            var_dump("creating settings table", $this->create_class_table_nestbox_settings());
+            $this->load_table_schema();
+            $this->parse_settings($this->select(table: $this::nestbox_settings_table, where: $where));
+        }
+
 
         foreach ($settings as $name => $value) {
             if (property_exists($this, $name)) {

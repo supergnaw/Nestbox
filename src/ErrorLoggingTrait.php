@@ -10,11 +10,11 @@ trait ErrorLoggingTrait
     {
         $sql = "CREATE TABLE IF NOT EXISTS `nestbox_errors` (
                     `error_id` INT NOT NULL AUTO_INCREMENT ,
-                    `occurred` NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+                    `occurred` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
                     `message` VARCHAR( 512 ) NOT NULL ,
                     `query` VARCHAR( 4096 ) NOT NULL ,
                     PRIMARY KEY ( `error_id` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
         $this->query_execute($sql);
     }
 

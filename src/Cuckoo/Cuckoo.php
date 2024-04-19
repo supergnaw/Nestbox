@@ -64,7 +64,7 @@ class Cuckoo extends Nestbox
                     `encryption` VARCHAR( 16 ) NOT NULL ,
                     PRIMARY KEY ( `schema_id` ) ,
                     UNIQUE KEY `schema_key` ( `table_name`, `column_name` )
-                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
         return $this->query_execute($sql);
     }
 
@@ -213,7 +213,7 @@ class Cuckoo extends Nestbox
 //                    `permission_description` VARCHAR(255) NOT NULL ,
 //                    `permission_group` VARCHAR(31) NOT NULL ,
 //                    PRIMARY KEY (`permission_id`)) ENGINE = InnoDB;
-//                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+//                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 //
 //        return $this->query_execute(query: $sql);
 //    }
@@ -225,7 +225,7 @@ class Cuckoo extends Nestbox
 //                    `permission_id` INT NOT NULL ,
 //                    `user_id` VARCHAR( 125 ) NOT NULL ,
 //                    PRIMARY KEY ( `assignment_id` )
-//                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8_unicode_ci;";
+//                ) ENGINE = InnoDB DEFAULT CHARSET=UTF8MB4 COLLATE=utf8mb4_general_ci;";
 //
 //        return $this->query_execute(query: $sql);
 //    }
