@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Supergnaw\Nestbox;
@@ -51,17 +52,22 @@ class Nestbox
         // start session if unstarted
         if (PHP_SESSION_ACTIVE !== session_status()) session_start();
 
+        $this->host = $host;
+        $this->user = $user;
+        $this->pass = $pass;
+        $this->name = $name;
+
         // default overrides with defined environment constants
-        if (defined(constant_name: 'NESTBOX_DB_HOST')) $this->host = constant(name: 'NESTBOX_DB_HOST');
-        if (defined(constant_name: 'NESTBOX_DB_USER')) $this->user = constant(name: 'NESTBOX_DB_USER');
-        if (defined(constant_name: 'NESTBOX_DB_PASS')) $this->pass = constant(name: 'NESTBOX_DB_PASS');
-        if (defined(constant_name: 'NESTBOX_DB_NAME')) $this->name = constant(name: 'NESTBOX_DB_NAME');
+        if (!$host && defined(constant_name: 'NESTBOX_DB_HOST')) $this->host = constant(name: 'NESTBOX_DB_HOST');
+        if (!$user && defined(constant_name: 'NESTBOX_DB_USER')) $this->user = constant(name: 'NESTBOX_DB_USER');
+        if (!$pass && defined(constant_name: 'NESTBOX_DB_PASS')) $this->pass = constant(name: 'NESTBOX_DB_PASS');
+        if (!$name && defined(constant_name: 'NESTBOX_DB_NAME')) $this->name = constant(name: 'NESTBOX_DB_NAME');
 
         // manual overrides for new or invoked instantiations
-        if ($host && !$this->host = $host) throw new MissingDatabaseHostException();
-        if ($user && !$this->user = $user) throw new MissingDatabaseUserException();
-        if ($pass && !$this->pass = $pass) throw new MissingDatabasePassException();
-        if ($name && !$this->name = $name) throw new MissingDatabaseNameException();
+        if (!$this->host) throw new MissingDatabaseHostException();
+        if (!$this->user) throw new MissingDatabaseUserException();
+        if (!$this->pass) throw new MissingDatabasePassException();
+        if (!$this->name) throw new MissingDatabaseNameException();
 
         // make sure class tables have been created
         $this->check_class_tables();

@@ -8,16 +8,17 @@ _Nestbox_'s purpose is to be a PDO wrapper for easily impelmenting database func
 
 Each bird *(class)* in the "nestbox" serves as a way to add specific functionality to Nestbox.
 
-| Bird                                 | Description                                                                                  |
-|--------------------------------------|----------------------------------------------------------------------------------------------|
-| [Nestbox](src/readme.md)             | The core "abstract" class that interfaces each component class of Nestbox with the database. |
-| [Babbler](src/Babbler/readme.md)     | Content management for website/blog functionality.                                           |
-| [Bullfinch](src/Bullfinch/readme.md) | Message board management. *(Not yet complete/available)*                                     |
-| [Cuckoo](src/Cuckoo/readme.md)       | Transparent in-line encryption for queries. *(Not yet complete/available)*                   |
-| [Lorikeet](src/Lorikeet/readme.md)   | An image upload processing and indexing. *(Not yet complete/available)*                      |
-| [Magpie](src/Magpie/readme.md)       | A user and role permissions manager.                                                         |
-| [Titmouse](src/Titmouse/readme.md)   | User registration and session management with built-in password best-practicces.             |
-| [Weaver](src/Weaver/readme.md)       | REST API endpoint management. *(Not yet complete/available)*                                 |
+| Bird                                 | Description                                                                                                         |
+|--------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| [Nestbox](src/readme.md)             | The core "abstract" class that interfaces each component class of Nestbox with the database.                        |
+| [Babbler](src/Babbler/readme.md)     | Content management for website/blog functionality.                                                                  |
+| [Bullfinch](src/Bullfinch/readme.md) | Message board management. *(Not yet complete/available)*                                                            |
+| [Cuckoo](src/Cuckoo/readme.md)       | Transparent in-line encryption for queries. *(Not yet complete/available)*                                          |
+| [Lorikeet](src/Lorikeet/readme.md)   | An image upload processing and indexing. *(Not yet complete/available)*                                             |
+| [Macaw](src/Macaw/readme.md)         | An interface for the Microsoft PlayFab [REST API](https://learn.microsoft.com/en-us/gaming/playfab/api-references/) |                                                                                              
+| [Magpie](src/Magpie/readme.md)       | A user and role permissions manager.                                                                                |
+| [Titmouse](src/Titmouse/readme.md)   | User registration and session management with built-in password best-practicces.                                    |
+| [Weaver](src/Weaver/readme.md)       | REST API endpoint management. *(Not yet complete/available)*                                                        |
 
 # Development & Contributing
 

@@ -9,6 +9,7 @@ use Supergnaw\Nestbox\Nestbox;
 class Babbler extends Nestbox
 {
     final protected const string PACKAGE_NAME = 'babbler';
+
     public int $babblerAuthorSize = 32;
     public int $babblerCategorySize = 64;
     public int $babblerSubCategorySize = 64;
