@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Lorikeet;
+namespace NestboxPHP\Nestbox\Lorikeet;
 
-use Supergnaw\Nestbox\Nestbox;
+use NestboxPHP\Nestbox\Nestbox;
 
 class Lorikeet extends Nestbox
 {

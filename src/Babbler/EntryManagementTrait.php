@@ -2,11 +2,26 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Babbler;
+namespace NestboxPHP\Nestbox\Babbler;
+
+use NestboxPHP\Nestbox\Exception\NestboxException;
 
 trait EntryManagementTrait
 {
-    // add entry
+    /**
+     * Adds a new babbler entry
+     *
+     * @param string $category
+     * @param string $sub_category
+     * @param string $title
+     * @param string $content
+     * @param string $author
+     * @param string|null $created
+     * @param string|null $published
+     * @param bool $is_draft
+     * @param bool $is_hidden
+     * @return bool
+     */
     public function add_entry(
         string $category,
         string $sub_category,
@@ -14,21 +29,21 @@ trait EntryManagementTrait
         string $content,
         string $author,
         string $created = null,
-        string $published = "",
+        string $published = null,
         bool   $is_draft = false,
         bool   $is_hidden = false
     ): bool
     {
         // prepare vars and verify entry
-        $optional = [
-            "category" => $category,
-            "sub_category" => $sub_category,
-            "title" => $title,
-            "content" => $content,
-            "author" => $author,
-        ];
-        if (!self::confirm_nonempty_params(params: $optional)) {
-            return false;
+        $emptyStrings = [];
+        if ($this->is_empty_string($category)) $emptyStrings[] = "'category'";
+        if ($this->is_empty_string($sub_category)) $emptyStrings[] = "'sub_category'";
+        if ($this->is_empty_string($title)) $emptyStrings[] = "'title'";
+        if ($this->is_empty_string($content)) $emptyStrings[] = "'content'";
+        if ($this->is_empty_string($author)) $emptyStrings[] = "'author'";
+
+        if ($emptyStrings) {
+            throw new BabblerException("Empty strings provided for: " . join(", ", $emptyStrings));
         }
 
         $params = [
@@ -74,7 +89,7 @@ trait EntryManagementTrait
 
         // execute
         if ($this->query_execute($sql, $params)) {
-            return 1 == $this->row_count();
+            return 1 == $this->get_row_count();
         }
         return false;
     }
@@ -121,7 +136,7 @@ trait EntryManagementTrait
         $sql = "UPDATE `babbler_entries` SET {$cols} WHERE `entry_id` = :entry_id;";
 
         // execute
-        if ($this->query_execute($sql, $params)) return 1 == $this->row_count();
+        if ($this->query_execute($sql, $params)) return 1 == $this->get_row_count();
         return false;
     }
 
@@ -129,5 +144,10 @@ trait EntryManagementTrait
     public function delete_entry(int $entry_id): bool
     {
         return $this->delete("babbler_entries", ["entry_id"=>$entry_id]);
+    }
+
+    public function is_empty_string(string $input): bool
+    {
+        return 0 == strlen(trim($input));
     }
 }

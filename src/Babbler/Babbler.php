@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Babbler;
+namespace NestboxPHP\Nestbox\Babbler;
 
-use Supergnaw\Nestbox\Nestbox;
+use NestboxPHP\Nestbox\Nestbox;
 
 class Babbler extends Nestbox
 {
@@ -29,7 +29,7 @@ class Babbler extends Nestbox
         $sort = (in_array(strtoupper($sort), array('ASC', 'DESC'))) ? strtoupper($sort) : 'ASC';
         $sql = "SELECT * FROM `babbler_entries` ORDER BY `{$orderBy}` {$sort};";
 
-        return ($this->query_execute($sql)) ? $this->results() : [];
+        return ($this->query_execute($sql)) ? $this->fetch_all_results() : [];
     }
 
     // get entry by ID
@@ -37,7 +37,7 @@ class Babbler extends Nestbox
     {
         $sql = "SELECT * FROM `babbler_entries` WHERE `entry_id` = :entryID;";
         $this->query_execute($sql, array('entryID' => $entry_id));
-        return $this->results()[0] ?? [];
+        return $this->fetch_all_results()[0] ?? [];
     }
 
     // get available categories
@@ -48,7 +48,7 @@ class Babbler extends Nestbox
 
         if (!$this->query_execute($sql)) return $output;
 
-        foreach ($this->results() as $result) $output[$result['category']] = $result['count'];
+        foreach ($this->fetch_all_results() as $result) $output[$result['category']] = $result['count'];
 
         return $output;
     }
@@ -59,7 +59,7 @@ class Babbler extends Nestbox
         $where = (!empty($category)) ? "WHERE `category` = :category" : "";
         $sql = "SELECT `sub_category`, COUNT(*) as `count` FROM `babbler_entries` {$where} GROUP BY `sub_category`;";
         $params = (!empty($category)) ? ["category" => $category] : [];
-        return ($this->query_execute(query: $sql, params: $params)) ? $this->results() : [];
+        return ($this->query_execute(query: $sql, params: $params)) ? $this->fetch_all_results() : [];
     }
 
     // get all entries of a certain category
@@ -80,7 +80,7 @@ class Babbler extends Nestbox
 
         $params = ['category' => $category];
         if (!empty($sub_category)) $params['sub_category'] = $sub_category;
-        return ($this->query_execute($sql, $params)) ? $this->results() : [];
+        return ($this->query_execute($sql, $params)) ? $this->fetch_all_results() : [];
     }
 
     // get entry by category and title
@@ -90,6 +90,6 @@ class Babbler extends Nestbox
         $sql = "SELECT * FROM `babbler_entries` {$where} AND `title` LIKE :title;";
         $params = ['category' => $category, 'title' => $title];
         if (!empty($sub_category)) $params['sub_category'] = $sub_category;
-        return ($this->query_execute($sql, $params)) ? $this->results(true) : [];
+        return ($this->query_execute($sql, $params)) ? $this->fetch_all_results(true) : [];
     }
 }

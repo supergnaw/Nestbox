@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Exception;
+namespace NestboxPHP\Nestbox\Exception;
 
 class TransactionRollbackFailedException extends NestboxException
 {
+    function __construct(string $message = "", int $code = 0, $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
 }

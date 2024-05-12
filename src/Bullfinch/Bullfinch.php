@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Bullfinch;
+namespace NestboxPHP\Nestbox\Bullfinch;
 
-use Supergnaw\Nestbox\Nestbox;
+use NestboxPHP\Nestbox\Nestbox;
 
 class Bullfinch extends Nestbox
 {

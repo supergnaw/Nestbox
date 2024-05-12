@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Magpie;
+namespace NestboxPHP\Nestbox\Magpie;
 
-use Supergnaw\Nestbox\Nestbox;
+use NestboxPHP\Nestbox\Nestbox;
 
 class Magpie extends Nestbox
 {

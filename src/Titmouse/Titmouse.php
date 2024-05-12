@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Titmouse;
+namespace NestboxPHP\Nestbox\Titmouse;
 
-use Supergnaw\Nestbox\Nestbox;
+use NestboxPHP\Nestbox\Nestbox;
 
 class Titmouse extends Nestbox
 {

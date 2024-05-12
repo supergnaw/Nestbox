@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace NestboxPHP\Nestbox\Exception;
 
-class MissingDatabaseHostException extends NestboxException
+class InvalidParameterValueType extends NestboxException
 {
     function __construct(string $message = "", int $code = 0, $previous = null)
     {

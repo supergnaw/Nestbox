@@ -2,9 +2,9 @@
 
 declare( strict_types = 1 );
 
-namespace Supergnaw\Nestbox\Titmouse;
+namespace NestboxPHP\Nestbox\Titmouse;
 
-use Supergnaw\Nestbox\Exception\NestboxException;
+use NestboxPHP\Nestbox\Exception\NestboxException;
 
 class TitmouseException extends NestboxException
 {

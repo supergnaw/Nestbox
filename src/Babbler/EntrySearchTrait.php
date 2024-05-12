@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Babbler;
+namespace NestboxPHP\Nestbox\Babbler;
 
 trait EntrySearchTrait
 {
@@ -44,7 +44,7 @@ trait EntrySearchTrait
 
         if (!$this->query_execute($sql)) return [];
 
-        return $this->results();
+        return $this->fetch_all_results();
     }
 
     public function search_entries_regex(string $pattern, string $category = "*"): array
@@ -55,7 +55,7 @@ trait EntrySearchTrait
 
         if (!$this->query_execute($sql, $params)) return [];
 
-        return $this->results();
+        return $this->fetch_all_results();
     }
 
     // find exact title

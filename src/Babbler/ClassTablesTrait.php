@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Supergnaw\Nestbox\Babbler;
+namespace NestboxPHP\Nestbox\Babbler;
 
 trait ClassTablesTrait
 {
